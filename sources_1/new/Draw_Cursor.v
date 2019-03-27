@@ -137,16 +137,16 @@ module Draw_Cursor(
             Axis_Imba_On = ~Axis_Imba_On;
             end
         else if ((cursor_horz < 240) & (cursor_vert < 895) & (cursor_vert > 878))
-        begin
+            begin
             if (Menu_State == 2'b00)
             Menu_State = 2'b10;
             else if (Menu_State == 2'b01)
             Waveform_State = 2'b10;
             else if (Menu_State == 2'b10)
             Grid_Imba_On = ~Grid_Imba_On;
-        end
+            end
         else if ((cursor_horz < 240) & (cursor_vert < 912) & (cursor_vert > 894))
-        begin
+            begin
             if (Menu_State == 2'b00)
             Menu_State = 2'b11;
             else if (Menu_State == 2'b01)
@@ -155,25 +155,35 @@ module Draw_Cursor(
             Tick_Imba_On = ~Tick_Imba_On;
             else
             Menu_State = 2'b00;
-        end
+            end
         else if ((cursor_horz < 240) & (cursor_vert < 927) & (cursor_vert > 911))
-        begin
+            begin
             if (Menu_State == 2'b01)
             Waveform_State = 2'b00;
             else if (Menu_State == 2'b10)
             Menu_State = 2'b00; 
-        end
+            end
         else if ((cursor_horz < 240) & (cursor_vert < 943) & (cursor_vert > 926))
+            begin
             if (Menu_State == 2'b01)
             Menu_State = 2'b00;
+            end
         else if ((cursor_horz > 738) & (cursor_horz < 865) & (cursor_vert > 895))
+            begin
             LIRO_state = 2'b00;
+            end
         else if ((cursor_horz > 876) & (cursor_horz < 1003) & (cursor_vert > 895))
+            begin
             LIRO_state = 2'b01;
+            end
         else if ((cursor_horz > 1014) & (cursor_horz < 1141) & (cursor_vert > 895))
+            begin
             LIRO_state = 2'b10;
+            end
         else if ((cursor_horz > 1152) & (cursor_horz < 1280) & (cursor_vert > 895))
+            begin
             LIRO_state = 2'b11;   
+            end
         end
         
     end
