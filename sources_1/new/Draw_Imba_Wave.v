@@ -22,6 +22,7 @@
 
 module Draw_Imba_Wave(
     input clk_24,
+    input clk_1000,
     input CLK_VGA,
     input clk_sample, //20kHz clock
     input [1:0] Waveform_State,
@@ -32,6 +33,7 @@ module Draw_Imba_Wave(
     
     output reg [11:0] VGA_Imba_Waveform //different output
     );
+     
     
     //The Sample_Memory represents the memory array used to store the voice samples.
     //There are 1280 points and each point can range from 0 to 1023. 
@@ -56,7 +58,7 @@ module Draw_Imba_Wave(
     wire [11:0] Bar_Wave;
 
     Draw_Circle drawCirc(clk_24, wave_sample, VGA_HORZ_COORD, VGA_VERT_COORD, Circle_Wave);
-    Draw_Bar drawBar(clk_sample, CLK_VGA, wave_sample, VGA_HORZ_COORD, VGA_VERT_COORD, Bar_Wave);
+    Draw_Bar drawBar(clk_1000, CLK_VGA, wave_sample, VGA_HORZ_COORD, VGA_VERT_COORD, Bar_Wave);
 
     always @(posedge CLK_VGA)
     begin

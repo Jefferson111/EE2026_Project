@@ -31,8 +31,8 @@ module Draw_Circle(
     
     wire [11:0] x = (VGA_HORZ_COORD > 640) ? VGA_HORZ_COORD - 640: 640 - VGA_HORZ_COORD;
     wire [11:0] y = (VGA_VERT_COORD > 512) ? VGA_VERT_COORD - 512: 512 - VGA_VERT_COORD; 
-    wire [9:0] wave_offset = wave_sample - 2040; //alter the values here when with mic
-    wire [15:0] radius = (wave_offset > 1023) ? 8'd255 : wave_offset[9:2]; // can just direct assign I think
+    //wire [9:0] wave_offset = wave_sample - 2040; //alter the values here when with mic
+    wire [15:0] radius = (wave_sample > 1023) ? 8'd255 : wave_sample[9:2]; // can just direct assign I think
     wire Condition_For_Circle = ( (x * x + y * y) < radius * radius);
     
     wire [11:0] color_pixel;

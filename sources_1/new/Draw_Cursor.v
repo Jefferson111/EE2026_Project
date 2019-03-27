@@ -60,10 +60,10 @@ module Draw_Cursor(
     output reg [1:0] Menu_State = 2'b00,
     output reg [1:0] Waveform_State = 2'b00,
     output reg FFT_State = 0,
-    output reg Amplitude_State = 0
-    //clap to activate menu
+    output reg Amplitude_State = 0,
+    output reg [1:0] LIRO_state = 2'b00
     //waveform history
-    //menu include tonns of options 
+
     
     );
     
@@ -166,7 +166,16 @@ module Draw_Cursor(
         else if ((cursor_horz < 240) & (cursor_vert < 943) & (cursor_vert > 926))
             if (Menu_State == 2'b01)
             Menu_State = 2'b00;
+        else if ((cursor_horz > 738) & (cursor_horz < 865) & (cursor_vert > 895))
+            LIRO_state = 2'b00;
+        else if ((cursor_horz > 876) & (cursor_horz < 1003) & (cursor_vert > 895))
+            LIRO_state = 2'b01;
+        else if ((cursor_horz > 1014) & (cursor_horz < 1141) & (cursor_vert > 895))
+            LIRO_state = 2'b10;
+        else if ((cursor_horz > 1152) & (cursor_horz < 1280) & (cursor_vert > 895))
+            LIRO_state = 2'b11;   
         end
+        
     end
     
     assign Condition_For_Cursor = ( ((VGA_HORZ_COORD == cursor_horz) && ((VGA_VERT_COORD - cursor_vert < 10) | (VGA_VERT_COORD - cursor_vert > -10))) |

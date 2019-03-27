@@ -29,6 +29,7 @@ module Draw_Waveform(
     end
     wire [11:0] color_pixel;
     Duo_Color duo(clk_6, color_pixel[11:4]);
+    //assign color_pixel[11:4] = 8'hFF;
     assign color_pixel[3:0] = 4'h0;
         
     wire [11:0] Normal_Wave;

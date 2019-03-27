@@ -25,6 +25,7 @@ module Scrolling_Display(
     input [11:0] VGA_VERT_COORD,
     
     //input imba_mode
+    input [3:0] vol,
     input Scrolling_Sw,
     input clk,
  
@@ -89,8 +90,12 @@ module Scrolling_Display(
     Alphabet_Map etter11(VGA_HORZ_COORD, VGA_VERT_COORD, base_horz2 + 195, 12'd64, 6'b1000, e[11]);
     Alphabet_Map etter12(VGA_HORZ_COORD, VGA_VERT_COORD, base_horz2 + 210, 12'd64, 6'b10010, e[12]);
     
-    Alphabet_Map etter13(VGA_HORZ_COORD, VGA_VERT_COORD, base_horz2 + 240, 12'd64, 6'b11010, e[13]);
-    Alphabet_Map etter14(VGA_HORZ_COORD, VGA_VERT_COORD, base_horz2 + 255, 12'd64, 6'b11010, e[14]);
+    wire [11:0] number;
+    Digit_Display d1(vol / 10, number[5:0]);
+    Digit_Display d2(vol % 10, number[11:6]);
+    
+    Alphabet_Map etter13(VGA_HORZ_COORD, VGA_VERT_COORD, base_horz2 + 240, 12'd64, number[5:0] , e[13]);
+    Alphabet_Map etter14(VGA_HORZ_COORD, VGA_VERT_COORD, base_horz2 + 255, 12'd64, number[11:6], e[14]);
     
     assign Condition_For_Text2 = Scrolling_Sw & (e[0] | e[1] | e[2] | e[3] | e[4] | e[5] | e[6] | e[7] | e[8] | e[9] | e[10] | e[11] | e[12] | e[13] |
                                   e[14]);

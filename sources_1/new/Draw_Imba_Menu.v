@@ -28,10 +28,15 @@ module Draw_Imba_Menu(
     input [11:0] VGA_VERT_COORD,
     
     input [1:0] menu_state,
+    input [1:0] LIRO_state,
     
     output Condition_For_Imba_Border, 
     output Condition_For_Imba_Menu,
-    output reg Condition_For_Imba_Menu_Text = 0
+    output reg Condition_For_Imba_Menu_Text = 0,
+    
+    output reg Condition_For_Rainbow_Text = 0,
+    output reg Condition_For_LIRO = 0,
+    output [3:0] Condition_For_Box
     );
     
     wire [3:0] main;
@@ -53,6 +58,62 @@ module Draw_Imba_Menu(
                                                     (VGA_HORZ_COORD >= 238 && VGA_HORZ_COORD <= 240 && VGA_VERT_COORD >= 832) |
                                                     (VGA_HORZ_COORD <= 2 && VGA_VERT_COORD > 834) |
                                                     (VGA_VERT_COORD >= 1021 && VGA_HORZ_COORD < 238));
+    
+    
+    
+    //need to split into 4 boxes, duo color each of them
+    //assign grey to LIRO text
+    
+    wire Condition_For_L;
+    wire Condition_For_I;
+    wire Condition_For_R;
+    wire Condition_For_O;
+    
+    Large_Font symL(VGA_HORZ_COORD, VGA_VERT_COORD, 12'd738, 12'd895, 6'b001011, Condition_For_L);
+    Large_Font symI(VGA_HORZ_COORD, VGA_VERT_COORD, 12'd876, 12'd895, 6'b001000, Condition_For_I);
+    Large_Font symR(VGA_HORZ_COORD, VGA_VERT_COORD, 12'd1014, 12'd895, 6'b010001, Condition_For_R);
+    Large_Font symO(VGA_HORZ_COORD, VGA_VERT_COORD, 12'd1152, 12'd895, 6'b001110, Condition_For_O);
+    
+    
+    assign Condition_For_Box[0] = Menu_Clap & ( (VGA_VERT_COORD > 895 ) & (VGA_VERT_COORD < 1024 ) & (VGA_HORZ_COORD >= 738) & (VGA_HORZ_COORD <= 865) );
+    assign Condition_For_Box[1] = Menu_Clap & ( (VGA_VERT_COORD > 895 ) & (VGA_VERT_COORD < 1024 ) & (VGA_HORZ_COORD >= 876) & (VGA_HORZ_COORD <= 1003) );
+    assign Condition_For_Box[2] = Menu_Clap & ( (VGA_VERT_COORD > 895 ) & (VGA_VERT_COORD < 1024 ) & (VGA_HORZ_COORD >= 1014) & (VGA_HORZ_COORD <= 1141) );
+    assign Condition_For_Box[3] = Menu_Clap & ( (VGA_VERT_COORD > 895 ) & (VGA_VERT_COORD < 1024 ) & (VGA_HORZ_COORD >= 1152) & (VGA_HORZ_COORD <= 1279) );
+                                             
+    always @ (CLK_VGA)
+    begin
+    if (Menu_Clap)
+        begin
+        case (LIRO_state)
+            2'b00 :
+                begin 
+                Condition_For_Rainbow_Text = Condition_For_L;
+                Condition_For_LIRO = Condition_For_I | Condition_For_R | Condition_For_O;
+                end
+            2'b01 : 
+                begin
+                Condition_For_Rainbow_Text = Condition_For_I;
+                Condition_For_LIRO = Condition_For_L | Condition_For_R | Condition_For_O;
+                end
+            2'b10 : 
+                begin
+                Condition_For_Rainbow_Text = Condition_For_R;
+                Condition_For_LIRO = Condition_For_L | Condition_For_I | Condition_For_O;
+                end
+            2'b11 : 
+                begin
+                Condition_For_Rainbow_Text = Condition_For_O;
+                Condition_For_LIRO = Condition_For_L | Condition_For_I | Condition_For_R;
+                end
+        endcase
+        end
+    else
+        begin
+        Condition_For_Rainbow_Text = 0; 
+        Condition_For_LIRO = 0;
+        end
+    end
+    
     
     always @ (CLK_VGA)
     begin

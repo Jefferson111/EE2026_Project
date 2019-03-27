@@ -15,6 +15,10 @@ module Voice_Scope_TOP(
     input Trigger_Sw,
     input Scrolling_Sw,
     input temp_sw,
+    //LED display control
+    input SW1,
+    input SW2,
+    input SW3,
     
     input btnL,
     input btnR,
@@ -33,7 +37,9 @@ module Voice_Scope_TOP(
     output VGA_VS,          // horizontal & vertical sync outputs to VGA connector
     output VGA_HS,
     
-    output [11:0] led
+    output [11:0] led,
+    output [7:0] seg,
+    output [3:0] an
     );
     
     wire CLK_VGA;
@@ -96,11 +102,15 @@ module Voice_Scope_TOP(
     wire Amplitude_State;
     wire [11:0] VGA_Imba_Grid;
     wire [11:0] VGA_Imba_Waveform;
-    
+    wire clk_20;
+    wire clk_1000;
+
     assign Menu_Clap = Trigger_Sw; //temporary
     assign wave_sample = sw ? MIC_in[11:2] : ramp_sample;
     assign draw_clk = (Is_Pause & ~Cursor_Sw)? 0 : clk_20k;
-           
+       
+    clock_divider clk1000hz(CLK, 1000, clk_1000);  
+    clock_divider clk20hz(CLK, 20, clk_20);       
     Clock_6hz s2clk(CLK, clk_6);
     slowclk s1clk(CLK, clk_20k);   
     buttonClk butclk(CLK, clk_but);
@@ -125,17 +135,32 @@ module Voice_Scope_TOP(
            
     Color_Select colSel(clk_but, UPulse, DPulse, Cursor_Sw, Color_Scheme[2:0]);
 
+
+    wire [3:0] vol;
+    wire [1:0] LIRO_state;
+    wire garb; //Menu_clap placeholder
+    wire Condition_For_Rainbow_Text;
+    wire Condition_For_LIRO;
+    wire [3:0] Condition_For_Box;
+    
+    //VOLUME INDICATOR INSTANTIATION
+    volume_indicator vol_ind(clk_20k,clk_20,LIRO_state,MIC_in,led,garb,vol); //remember to change garb back to menu clap
+    seven_seg_display sevenseg(clk_20k,vol,LIRO_state,an,seg);
+
     Draw_Welcome_Imba welcome(Imba_Mode_On, Clock_Time[0], CLK_VGA, VGA_HORZ_COORD, VGA_VERT_COORD, Condition_For_Welcome);
-    Draw_Imba_Menu Imba_menu(CLK_VGA, Menu_Clap, VGA_HORZ_COORD, VGA_VERT_COORD, Menu_State, Condition_For_Imba_Border, Condition_For_Imba_Menu, Condition_For_Imba_Menu_Text);
-    Draw_Imba_Background Imba_back(VGA_HORZ_COORD, VGA_VERT_COORD, CLK_VGA, clk_24,
+    Draw_Imba_Menu Imba_menu(CLK_VGA, Menu_Clap, VGA_HORZ_COORD, VGA_VERT_COORD, Menu_State, LIRO_state, 
+        Condition_For_Imba_Border, Condition_For_Imba_Menu, Condition_For_Imba_Menu_Text,
+        Condition_For_Rainbow_Text, Condition_For_LIRO, Condition_For_Box);
+    Draw_Imba_Background Imba_back(VGA_HORZ_COORD, VGA_VERT_COORD, CLK_VGA, clk_24, clk_6,
         Axis_Imba_On, Grid_Imba_On, Tick_Imba_On,
         Condition_For_Welcome, Condition_For_Imba_Menu, Condition_For_Imba_Border, Condition_For_Imba_Menu_Text,
         Condition_For_Cursor, Condition_For_Cursor_Menu, Condition_For_Cursor_Border, Condition_For_Imba_Cursor_Text,
+        Condition_For_Rainbow_Text, Condition_For_LIRO, Condition_For_Box,
         VGA_Imba_Grid[11:8], VGA_Imba_Grid[7:4], VGA_Imba_Grid[3:0]);
-    Draw_Imba_Wave wave_draw(clk_24, CLK_VGA, draw_clk, Waveform_State, wave_sample,
+    Draw_Imba_Wave wave_draw(clk_24, clk_1000, CLK_VGA, draw_clk, Waveform_State, wave_sample,
         VGA_HORZ_COORD, VGA_VERT_COORD, VGA_Imba_Waveform);
     
-    Scrolling_Display scroll(VGA_HORZ_COORD, VGA_VERT_COORD, Scrolling_Sw, clk_24,
+    Scrolling_Display scroll(VGA_HORZ_COORD, VGA_VERT_COORD, vol, Scrolling_Sw, clk_24,
         Condition_For_Scroll_Text1, Condition_For_Scroll_Text2);
     Draw_Menu normal_menu(VGA_HORZ_COORD, VGA_VERT_COORD, Menu_Sw, Clock_Time, 
         Axis_On, Grid_On, Tick_On, Wave_Type,
@@ -145,7 +170,7 @@ module Voice_Scope_TOP(
         btnL, btnR, btnC, btnU, btnD, CPulse, Menu_Clap,
         Condition_For_Cursor, Condition_For_Cursor_Menu, Condition_For_Cursor_Border, Condition_For_Cursor_Text1, Condition_For_Cursor_Text2, Condition_For_Imba_Cursor_Text,
         Axis_On, Grid_On, Tick_On, Wave_Type, Imba_Mode_On,
-        Axis_Imba_On, Grid_Imba_On, Tick_Imba_On, Menu_State, Waveform_State, FFT_State, Amplitude_State);
+        Axis_Imba_On, Grid_Imba_On, Tick_Imba_On, Menu_State, Waveform_State, FFT_State, Amplitude_State, LIRO_state);
     Draw_Background draw_back(VGA_HORZ_COORD, VGA_VERT_COORD, CLK_VGA,
         Color_Scheme, Axis_On, Grid_On, Tick_On,
         Condition_For_Menu_Box, Condition_For_Menu_Border, Condition_For_Menu_Text,
@@ -161,5 +186,68 @@ module Voice_Scope_TOP(
         VGA_Imba_Grid, VGA_Imba_Waveform,
         VGA_Red_Chan, VGA_Green_Chan, VGA_Blue_Chan); 
     VGA_DISPLAY display(CLK, CLK_VGA, VGA_Red_Chan, VGA_Green_Chan, VGA_Blue_Chan, VGA_HORZ_COORD, VGA_VERT_COORD, VGA_RED, VGA_GREEN, VGA_BLUE, VGA_VS, VGA_HS);
-                    
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          //FFT
+    //output
+     
+    
+    //wire s_axis_config_tready; //uselss wire to tell config is ready
+    //wire s_axis_data_tready; //uselss ready to recieve data, if 0 need send again
+    //wire [31:0] m_axis_data_tdata; //output data
+    //wire m_axis_data_tvalid; //data is recievable
+    //wire m_axis_data_tlast; //signfiy output data is all send out
+    //wire event_frame_started; //useless
+    //wire event_tlast_unexpected; //unexpected premature end bit
+    //wire event_tlast_missing; //missing end bit
+    ////useless
+    //wire event_status_channel_halt; //module stop working
+    //wire event_data_in_channel_halt; //module data input stop working
+    //wire event_data_out_channel_halt; //module data output stop working
+    
+    ////input data
+    //wire [31:0] s_axis_data_tdata = {20'b0, MIC_in}; //input data
+    //wire m_axis_data_tready = 1; //outside ready to receive data
+    //wire s_axis_data_tlast = 0; //usless end bit to signify end of data transmisssion
+    
+    //reg [9:0] result[1279:0];
+    //reg [10:0] i = 0;
+    ////wire s_axis_data_tlast = (i==1279) ? 1: 0; //usless end bit to signify end of data transmisssion
+    //always @ (posedge clk_20k)
+    //begin
+    //i <= (i == 1279) ? 0 : i + 1;
+    //result[i] <= (m_axis_data_tvalid) ? m_axis_data_tdata[11:2] : 512;
+    //end
+    
+    //xfft_0 your_instance_name (
+    //  .aclk(CLK),                                                // input wire aclk
+    //  .s_axis_config_tdata(16'b10100001111),                  // input wire [15 : 0] s_axis_config_tdata
+    //  .s_axis_config_tvalid(clk_20k),                // input wire s_axis_config_tvalid
+    //  .s_axis_config_tready(s_axis_config_tready),                // output wire s_axis_config_tready
+    //  .s_axis_data_tdata(s_axis_data_tdata),                      // input wire [31 : 0] s_axis_data_tdata
+    //  .s_axis_data_tvalid(1/*FFT_State*/),                    // input wire s_axis_data_tvalid
+    //  .s_axis_data_tready(s_axis_data_tready),                    // output wire s_axis_data_tready
+    //  .s_axis_data_tlast(s_axis_data_tlast),                      // input wire s_axis_data_tlast
+    //  .m_axis_data_tdata(m_axis_data_tdata),                      // output wire [31 : 0] m_axis_data_tdata
+    //  .m_axis_data_tvalid(m_axis_data_tvalid),                    // output wire m_axis_data_tvalid
+    //  .m_axis_data_tready(m_axis_data_tready),                    // input wire m_axis_data_tready
+    //  .m_axis_data_tlast(m_axis_data_tlast),                      // output wire m_axis_data_tlast
+    //  .event_frame_started(event_frame_started),                  // output wire event_frame_started
+    //  .event_tlast_unexpected(event_tlast_unexpected),            // output wire event_tlast_unexpected
+    //  .event_tlast_missing(event_tlast_missing),                  // output wire event_tlast_missing
+    //  .event_status_channel_halt(event_status_channel_halt),      // output wire event_status_channel_halt
+    //  .event_data_in_channel_halt(event_data_in_channel_halt),    // output wire event_data_in_channel_halt
+    //  .event_data_out_channel_halt(event_data_out_channel_halt)  // output wire event_data_out_channel_halt
+    //);          
 endmodule
